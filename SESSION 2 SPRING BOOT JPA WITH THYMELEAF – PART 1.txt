@@ -1,0 +1,269 @@
+=============================================
+SESSION 2: SPRING BOOT JPA WITH THYMELEAF – PART 1
+=============================================
+
+1. SESSION GOAL
+To create a Spring Boot web project with:
+ - Thymeleaf (for front-end web pages)
+ - JPA (for database connection)
+ - MySQL (for storing data)
+
+After this session:	
+You will be able to create a form, save data in the database, and display data on a web page.
+
+-------------------------------------------------------------
+
+2. WHAT IS JPA (JAVA PERSISTENCE API)
+JPA is used to connect Java applications with databases.
+It helps in saving, reading, updating, and deleting data.
+
+Spring Boot uses Hibernate as the JPA provider by default.
+
+-------------------------------------------------------------
+
+3. WHAT IS THYMELEAF
+Thymeleaf is a template engine used to create HTML pages in Spring Boot.
+It helps to display dynamic data (from backend to frontend).
+
+Example:
+If your controller sends name = "Yashwant"
+Thymeleaf can show → Welcome, Yashwant!
+
+-------------------------------------------------------------
+
+4. SOFTWARE NEEDED
+1. JDK 17 or later
+2. Spring Tool Suite (STS)
+3. MySQL Database
+4. Browser (for testing)
+5. Postman (optional)
+
+-------------------------------------------------------------
+
+5. PROJECT CREATION STEPS
+
+Step 1: Open STS → File → New → Spring Starter Project
+
+Step 2: Enter Details
+ Project Name: StudentApp
+ Type: Maven
+ Java Version: 17
+
+Step 3: Add Dependencies:
+   - Spring Web
+   - Spring Boot DevTools
+   - Thymeleaf
+   - Spring Data JPA
+   - MySQL Driver
+
+Step 4: Click Finish
+Project will be generated automatically.
+
+-------------------------------------------------------------
+
+6. APPLICATION.PROPERTIES CONFIGURATION
+
+Open file: src/main/resources/application.properties
+
+-------------------------------------------------------------
+spring.datasource.url=jdbc:mysql://localhost:3306/studentdb
+spring.datasource.username=root
+spring.datasource.password=1234
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+server.port=8081
+-------------------------------------------------------------
+
+-------------------------------------------------------------
+
+7. DATABASE SETUP
+Open MySQL and create a new database:
+
+CREATE DATABASE studentdb;
+
+-------------------------------------------------------------
+
+8. CREATE ENTITY CLASS (STUDENT.JAVA)
+
+Location: src/main/java/com/example/studentapp/entity/Student.java
+
+-------------------------------------------------------------
+package com.example.studentapp.entity;
+
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+
+@Entity
+public class Student {
+   @Id
+   @GeneratedValue(strategy = GenerationType.IDENTITY)
+   private Long id;
+   private String name;
+   private String course;
+   private String email;
+
+   // Getters and Setters
+   public Long getId() { return id; }
+   public void setId(Long id) { this.id = id; }
+
+   public String getName() { return name; }
+   public void setName(String name) { this.name = name; }
+
+   public String getCourse() { return course; }
+   public void setCourse(String course) { this.course = course; }
+
+   public String getEmail() { return email; }
+   public void setEmail(String email) { this.email = email; }
+}
+-------------------------------------------------------------
+
+-------------------------------------------------------------
+
+9. CREATE REPOSITORY INTERFACE
+
+Location: src/main/java/com/example/studentapp/repository/StudentRepository.java
+
+-------------------------------------------------------------
+package com.example.studentapp.repository;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import com.example.studentapp.entity.Student;
+
+public interface StudentRepository extends JpaRepository<Student, Long> {
+
+}
+-------------------------------------------------------------
+
+-------------------------------------------------------------
+
+10. CREATE CONTROLLER
+
+Location: src/main/java/com/example/studentapp/controller/StudentController.java
+
+-------------------------------------------------------------
+package com.example.studentapp.controller;
+
+import com.example.studentapp.entity.Student;
+import com.example.studentapp.repository.StudentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+@Controller
+public class StudentController {
+
+   @Autowired
+   private StudentRepository repo;
+
+   // To show form
+   @GetMapping("/studentForm")
+   public String showForm(Model model) {
+      model.addAttribute("student", new Student());
+      return "student_form";
+   }
+
+   // To save data
+   @PostMapping("/saveStudent")
+   public String saveStudent(@ModelAttribute Student student) {
+      repo.save(student);
+      return "redirect:/studentList";
+   }
+
+   // To show all students
+   @GetMapping("/studentList")
+   public String viewList(Model model) {
+      model.addAttribute("list", repo.findAll());
+      return "student_list";
+   }
+}
+-------------------------------------------------------------
+
+-------------------------------------------------------------
+
+11. CREATE TEMPLATES
+
+Location: src/main/resources/templates/
+
+(1) student_form.html
+-------------------------------------------------------------
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+   <title>Student Form</title>
+</head>
+<body>
+   <h2>Add Student</h2>
+   <form th:action="@{/saveStudent}" th:object="${student}" method="post">
+      Name: <input type="text" th:field="*{name}"/><br><br>
+      Course: <input type="text" th:field="*{course}"/><br><br>
+      Email: <input type="text" th:field="*{email}"/><br><br>
+      <button type="submit">Save</button>
+   </form>
+   <br>
+   <a href="/studentList">View All Students</a>
+</body>
+</html>
+-------------------------------------------------------------
+
+(2) student_list.html
+-------------------------------------------------------------
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+   <title>Student List</title>
+</head>
+<body>
+   <h2>All Students</h2>
+   <table border="1">
+      <tr>
+         <th>ID</th>
+         <th>Name</th>
+         <th>Course</th>
+         <th>Email</th>
+      </tr>
+      <tr th:each="stud : ${list}">
+         <td th:text="${stud.id}"></td>
+         <td th:text="${stud.name}"></td>
+         <td th:text="${stud.course}"></td>
+         <td th:text="${stud.email}"></td>
+      </tr>
+   </table>
+   <br>
+   <a href="/studentForm">Add New Student</a>
+</body>
+</html>
+-------------------------------------------------------------
+
+-------------------------------------------------------------
+
+12. RUN APPLICATION
+Right-click → Run As → Spring Boot App
+
+Then open browser:
+ http://localhost:8081/studentForm   (to add student)
+ http://localhost:8081/studentList   (to view list)
+
+-------------------------------------------------------------
+
+13. OUTPUT
+1. Form page to add student details.
+2. Data saved into MySQL database.
+3. List page shows all saved students.
+
+-------------------------------------------------------------
+
+14. NEXT SESSION (PART 2)
+ - Edit and Delete student records
+ - Bootstrap design for form and table
+ - Better navigation and layout
+
+-------------------------------------------------------------
+
+END OF SESSION NOTES
+	Trainer: Prof. Yashwant
+	Topic: Spring Boot JPA with Thymeleaf – Part 1
+	Duration: 1 Hour Session
+=============================================

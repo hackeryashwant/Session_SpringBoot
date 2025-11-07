@@ -1,0 +1,232 @@
+=============================================
+SESSION 3: SPRING BOOT JPA WITH THYMELEAF – PART 2
+=============================================
+
+1. SESSION GOAL
+In this session we will:
+ - Add EDIT and DELETE features
+ - Improve web page design using Bootstrap
+ - Complete Student Management CRUD application
+
+After this session:
+You will be able to Add, View, Edit, and Delete records in MySQL through Spring Boot and Thymeleaf.
+
+-------------------------------------------------------------
+
+2. PREVIOUS SESSION RECAP
+We created:
+ - Entity (Student.java)
+ - Repository (StudentRepository.java)
+ - Controller (StudentController.java)
+ - Templates (student_form.html, student_list.html)
+ - Database connection with MySQL
+
+-------------------------------------------------------------
+
+3. ADD NEW FEATURES
+We will now add:
+ 1. Edit existing student details
+ 2. Delete student record
+ 3. Use Bootstrap for better look and feel
+
+-------------------------------------------------------------
+
+4. UPDATE CONTROLLER
+
+File: src/main/java/com/example/studentapp/controller/StudentController.java
+
+-------------------------------------------------------------
+package com.example.studentapp.controller;
+
+import com.example.studentapp.entity.Student;
+import com.example.studentapp.repository.StudentRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Optional;
+
+@Controller
+public class StudentController {
+
+   @Autowired
+   private StudentRepository repo;
+
+   // Show add form
+   @GetMapping("/studentForm")
+   public String showForm(Model model) {
+      model.addAttribute("student", new Student());
+      return "student_form";
+   }
+
+   // Save new or updated student
+   @PostMapping("/saveStudent")
+   public String saveStudent(@ModelAttribute Student student) {
+      repo.save(student);
+      return "redirect:/studentList";
+   }
+
+   // Show all students
+   @GetMapping("/studentList")
+   public String viewList(Model model) {
+      model.addAttribute("list", repo.findAll());
+      return "student_list";
+   }
+
+   // Edit student
+   @GetMapping("/edit/{id}")
+   public String editStudent(@PathVariable Long id, Model model) {
+      Optional<Student> s = repo.findById(id);
+      model.addAttribute("student", s.get());
+      return "student_form";
+   }
+
+   // Delete student
+   @GetMapping("/delete/{id}")
+   public String deleteStudent(@PathVariable Long id) {
+      repo.deleteById(id);
+      return "redirect:/studentList";
+   }
+}
+-------------------------------------------------------------
+
+-------------------------------------------------------------
+
+5. MODIFY student_list.html WITH EDIT & DELETE BUTTONS
+File: src/main/resources/templates/student_list.html
+
+-------------------------------------------------------------
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+   <title>Student List</title>
+   <link rel="stylesheet" 
+         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+   <div class="container mt-4">
+      <h2 class="text-center mb-4">Student List</h2>
+      <a href="/studentForm" class="btn btn-primary mb-3">Add New Student</a>
+      
+      <table class="table table-bordered table-striped">
+         <thead class="table-dark">
+            <tr>
+               <th>ID</th>
+               <th>Name</th>
+               <th>Course</th>
+               <th>Email</th>
+               <th>Action</th>
+            </tr>
+         </thead>
+         <tbody>
+            <tr th:each="stud : ${list}">
+               <td th:text="${stud.id}"></td>
+               <td th:text="${stud.name}"></td>
+               <td th:text="${stud.course}"></td>
+               <td th:text="${stud.email}"></td>
+               <td>
+                  <a th:href="@{'/edit/' + ${stud.id}}" class="btn btn-warning btn-sm">Edit</a>
+                  <a th:href="@{'/delete/' + ${stud.id}}" class="btn btn-danger btn-sm"
+                     onclick="return confirm('Are you sure?')">Delete</a>
+               </td>
+            </tr>
+         </tbody>
+      </table>
+   </div>
+</body>
+</html>
+-------------------------------------------------------------
+
+-------------------------------------------------------------
+
+6. IMPROVE FORM DESIGN WITH BOOTSTRAP
+File: src/main/resources/templates/student_form.html
+
+-------------------------------------------------------------
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+   <title>Student Form</title>
+   <link rel="stylesheet" 
+         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+</head>
+<body class="bg-light">
+   <div class="container mt-5">
+      <div class="card shadow p-4">
+         <h2 class="text-center text-primary mb-4">Student Form</h2>
+         <form th:action="@{/saveStudent}" th:object="${student}" method="post">
+            
+            <input type="hidden" th:field="*{id}"/>
+            
+            <div class="mb-3">
+               <label class="form-label">Name:</label>
+               <input type="text" th:field="*{name}" class="form-control" required/>
+            </div>
+            <div class="mb-3">
+               <label class="form-label">Course:</label>
+               <input type="text" th:field="*{course}" class="form-control" required/>
+            </div>
+            <div class="mb-3">
+               <label class="form-label">Email:</label>
+               <input type="email" th:field="*{email}" class="form-control" required/>
+            </div>
+            
+            <div class="text-center">
+               <button type="submit" class="btn btn-success">Save</button>
+               <a href="/studentList" class="btn btn-secondary">Back to List</a>
+            </div>
+         </form>
+      </div>
+   </div>
+</body>
+</html>
+-------------------------------------------------------------
+
+-------------------------------------------------------------
+
+7. OUTPUT FLOW
+Step 1 → Open browser → http://localhost:8081/studentList  
+Step 2 → Click "Add New Student" → Fill form → Save  
+Step 3 → View saved students list  
+Step 4 → Click "Edit" to update record  
+Step 5 → Click "Delete" to remove record  
+
+-------------------------------------------------------------
+
+8. DATABASE RESULT
+All student records are stored in the MySQL table `student`.
+
+Sample data:
+-------------------------------------------------------------
+| ID | Name      | Course     | Email                |
+|----|------------|------------|----------------------|
+|  1 | Riya Shah  | Java       | riya@gmail.com       |
+|  2 | Arjun Mehta| Python     | arjun@gmail.com      |
+|  3 | Neha Patel | React      | neha@gmail.com       |
+-------------------------------------------------------------
+
+-------------------------------------------------------------
+
+9. ADVANTAGES OF USING THYMELEAF WITH JPA
+1. Fully integrated front-end + back-end in one app.
+2. No need for separate HTML hosting.
+3. Database operations (CRUD) handled automatically.
+4. Bootstrap makes pages responsive and modern.
+5. Easy to maintain for students and beginners.
+
+-------------------------------------------------------------
+
+10. NEXT SESSION (SESSION 4)
+ - Form Validation using Spring Boot
+ - Error messages in Thymeleaf
+ - Success message after saving record
+ - Styling enhancements with Bootstrap alerts
+
+-------------------------------------------------------------
+
+END OF SESSION NOTES
+	Trainer: Prof. Yashwant
+	Topic: Spring Boot JPA with Thymeleaf – Part 2 (Edit, Delete, Bootstrap)
+	Duration: 1 Hour Session
+=============================================
